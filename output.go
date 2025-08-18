@@ -59,7 +59,12 @@ func (w *Output) CheckError(err error) {
 }
 
 func (w *Output) Write(s string, a ...interface{}) {
-	_, err := w.w.Write([]byte(fmt.Sprintf(s, a...)))
+	var err error
+	if len(a) > 0 {
+		_, err = w.w.Write([]byte(fmt.Sprintf(s, a...)))
+	} else {
+		_, err = w.w.Write([]byte(s))
+	}
 	w.CheckError(err)
 }
 
