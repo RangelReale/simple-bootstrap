@@ -37,7 +37,13 @@ func (w *Output) Start(options ...StartOption) {
 	%s
 	</style>
 	`, optns.style)
-
+	}
+	if optns.script != "" {
+		w.Write(`
+	<script>
+	%s
+	</script>
+	`, optns.script)
 	}
 }
 
@@ -82,7 +88,14 @@ func WithStartStyle(style string) StartOption {
 	}
 }
 
+func WithStartScript(script string) StartOption {
+	return func(options *startOptions) {
+		options.script = script
+	}
+}
+
 type startOptions struct {
-	data  any
-	style string
+	data   any
+	style  string
+	script string
 }
