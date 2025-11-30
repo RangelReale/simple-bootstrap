@@ -10,9 +10,10 @@ import (
 var (
 	//go:embed templates/*.tmpl
 	templatesFS     embed.FS
-	parsedTemplates = template.Must(template.ParseFS(templatesFS, "templates/*.tmpl"))
+	parsedTemplates = template.Must(template.New("templates").
+			ParseFS(templatesFS, "templates/*.tmpl"))
 )
 
-func Template(w io.Writer, name string, data any) error {
+func Template(w io.Writer, name string, data map[string]any) error {
 	return parsedTemplates.ExecuteTemplate(w, fmt.Sprintf("%s.html.tmpl", name), data)
 }

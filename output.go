@@ -9,46 +9,73 @@ import (
 type Output struct {
 	w   http.ResponseWriter
 	err error
+
+	start     bool
+	startData map[string]any
+
+	containerClass  string
+	bootstrapCSSURL string
+	bootstrapJSURL  string
+
+	style  string
+	script string
 }
 
-func NewOutput(w http.ResponseWriter) *Output {
-	return &Output{w: w}
-}
-
-func NewOutputStart(w http.ResponseWriter, options ...StartOption) *Output {
-	ret := NewOutput(w)
-	ret.Start(options...)
+func NewOutput(w http.ResponseWriter, options ...Option) *Output {
+	ret := &Output{
+		w:               w,
+		containerClass:  "container",
+		bootstrapCSSURL: `https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css`,
+		bootstrapJSURL:  `https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js`,
+	}
+	for _, option := range options {
+		option(ret)
+	}
+	if ret.start {
+		ret.Start(ret.startData)
+	}
 	return ret
 }
 
-func (w *Output) Start(options ...StartOption) {
-	var optns startOptions
-	for _, opt := range options {
-		opt(&optns)
+func (w *Output) Start(data map[string]any) {
+	beginData := map[string]any{
+		"title":           "Title",
+		"containerClass":  w.containerClass,
+		"bootstrapCSSURL": w.bootstrapCSSURL,
+	}
+	for k, v := range data {
+		beginData[k] = v
 	}
 
 	w.w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	w.CheckError(Template(w.w, "layout_begin", optns.data))
+	w.CheckError(Template(w.w, "layout_begin", beginData))
 
-	if optns.style != "" {
+	if w.style != "" {
 		w.Write(`
 	<style>
 	%s
 	</style>
-	`, optns.style)
+	`, w.style)
 	}
-	if optns.script != "" {
+	if w.script != "" {
 		w.Write(`
 	<script>
 	%s
 	</script>
-	`, optns.script)
+	`, w.script)
 	}
 }
 
-func (w *Output) End(data any) {
-	w.CheckError(Template(w.w, "layout_end", data))
+func (w *Output) End(data map[string]any) {
+	endData := map[string]any{
+		"bootstrapJSURL": w.bootstrapJSURL,
+	}
+	for k, v := range data {
+		endData[k] = v
+	}
+
+	w.CheckError(Template(w.w, "layout_end", endData))
 }
 
 func (w *Output) Err() error {
@@ -74,28 +101,23 @@ func (w *Output) Write(s string, a ...interface{}) {
 	w.CheckError(err)
 }
 
-type StartOption func(options *startOptions)
+type Option func(options *Output)
 
-func WithStartData(data any) StartOption {
-	return func(options *startOptions) {
-		options.data = data
+func WithStart(start bool, data map[string]any) Option {
+	return func(options *Output) {
+		options.start = start
+		options.startData = data
 	}
 }
 
-func WithStartStyle(style string) StartOption {
-	return func(options *startOptions) {
+func WithStyle(style string) Option {
+	return func(options *Output) {
 		options.style = style
 	}
 }
 
-func WithStartScript(script string) StartOption {
-	return func(options *startOptions) {
+func WithScript(script string) Option {
+	return func(options *Output) {
 		options.script = script
 	}
-}
-
-type startOptions struct {
-	data   any
-	style  string
-	script string
 }
