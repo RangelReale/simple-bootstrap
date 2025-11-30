@@ -6,4 +6,4 @@
     <link href="{{ .bootstrapCSSURL }}" rel="stylesheet" crossorigin="anonymous">
 </head>
 <body>
-    <div class="{{ .containerClass }}">
+    {{if .createContainer -}}<div class="{{ .containerClass }}">{{- end }}

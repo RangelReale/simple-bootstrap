@@ -13,6 +13,7 @@ type Output struct {
 	start     bool
 	startData map[string]any
 
+	createContainer bool
 	containerClass  string
 	bootstrapCSSURL string
 	bootstrapJSURL  string
@@ -24,6 +25,7 @@ type Output struct {
 func NewOutput(w http.ResponseWriter, options ...Option) *Output {
 	ret := &Output{
 		w:               w,
+		createContainer: true,
 		containerClass:  "container",
 		bootstrapCSSURL: `https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css`,
 		bootstrapJSURL:  `https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js`,
@@ -40,6 +42,7 @@ func NewOutput(w http.ResponseWriter, options ...Option) *Output {
 func (w *Output) Start(data map[string]any) {
 	beginData := map[string]any{
 		"title":           "Title",
+		"createContainer": w.createContainer,
 		"containerClass":  w.containerClass,
 		"bootstrapCSSURL": w.bootstrapCSSURL,
 	}
@@ -69,7 +72,8 @@ func (w *Output) Start(data map[string]any) {
 
 func (w *Output) End(data map[string]any) {
 	endData := map[string]any{
-		"bootstrapJSURL": w.bootstrapJSURL,
+		"bootstrapJSURL":  w.bootstrapJSURL,
+		"createContainer": w.createContainer,
 	}
 	for k, v := range data {
 		endData[k] = v
@@ -107,6 +111,18 @@ func WithStart(start bool, data map[string]any) Option {
 	return func(options *Output) {
 		options.start = start
 		options.startData = data
+	}
+}
+
+func WithCreateContainer(createContainer bool) Option {
+	return func(options *Output) {
+		options.createContainer = createContainer
+	}
+}
+
+func WithContainerClass(containerClass string) Option {
+	return func(options *Output) {
+		options.containerClass = containerClass
 	}
 }
 
